@@ -1,0 +1,35 @@
+version: "3.3"
+
+services:
+
+  api:
+    image: scrapper:latest
+    ports:
+      - 8080:8080
+    command: sh -c "ls && sleep 10 && python scrapping_asyncio/infrastructure/service.py"
+    volumes:
+      - type: bind
+        source: ./scrapping_asyncio/
+        target: /app/scrapping_asyncio/
+    environment:
+      - PYTHONUNBUFFERED=0
+
+  worker:
+    image: scrapper:latest
+    command: sh -c "ls && sleep 10 && python scrapping_asyncio/infrastructure/worker.py"
+    volumes:
+      - type: bind
+        source: ./scrapping_asyncio/
+        target: /app/scrapping_asyncio/
+    environment:
+      - PYTHONUNBUFFERED=0
+
+  mongodb:
+    image: mongo:latest
+    hostname: mongodb
+    ports:
+      - 27017:27017
+
+  rabbitmq:
+    image: rabbitmq
+    hostname: rabbitmq
