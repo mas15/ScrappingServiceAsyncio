@@ -4,7 +4,7 @@ run:
 	docker-compose up
 
 test: venv
-	. venv/bin/activate && py.test tests
+	. venv/bin/activate && py.test tests -v
 
 coverage:
 	py.test --cov-config .coveragerc --verbose --cov-report term --cov-report xml --cov=requests tests
@@ -21,6 +21,7 @@ clean:
 	rm --force --recursive build/
 	rm --force --recursive dist/
 	rm --force --recursive *.egg-info
+	find . -name "*.pyc" -exec rm -f {} \;
 	rm -rf venv
 
 build:

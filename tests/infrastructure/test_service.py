@@ -69,3 +69,6 @@ async def test_two_tasks(api_service):
     assert resp.status == 200
     text = json.loads(await resp.text())
     assert text == {'id': '2', 'url': 'www.xd.pl', 'status': 'WAITING'}
+
+
+# TODO test images, texts

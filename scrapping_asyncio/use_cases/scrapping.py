@@ -1,25 +1,30 @@
 import mimetypes
-import os
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, List
 from urllib.parse import urljoin
 
-import aiofiles
 import aiohttp
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 
+from scrapping_asyncio.entities.task import Task
+from scrapping_asyncio.entities.tasks_data_storage import TaskDataStorage
 
-async def scrape(url: str, text_file_path: str, images_dir_path: str):
-    content, _ = await download_content(url)
+
+async def scrape(task: Task, storage: TaskDataStorage) -> Tuple[str, List[str]]:
+    content, _ = await download_content(task.url)
     soup = BeautifulSoup(content, 'html.parser')
 
     text = scrape_text(soup)
-    await save_text(text, text_file_path)
+    text_filename = await storage.save_text(task, text)
 
-    imgs_urls = get_images_urls(soup, url)
+    images_filenames = []
+    imgs_urls = get_images_urls(soup, task.url)
     for img_url in imgs_urls:
-        image, image_name = await download_content(img_url)
-        await save_image(image, image_name, images_dir_path)
+        image_content, image_name = await download_content(img_url)
+        image_filename = await storage.save_image(task, image_content, image_name)
+        images_filenames.append(image_filename)
+
+    return text_filename, images_filenames
 
 
 async def download_content(url: str) -> Tuple[bytes, str]:
@@ -44,17 +49,6 @@ def scrape_text(soup) -> str:
     visible_texts = filter(_is_tag_visible, texts)
     result = "\n".join(t.strip() for t in visible_texts)
     return result
-
-
-async def save_text(text, text_file_path):
-    async with aiofiles.open(text_file_path, 'w') as f:
-        await f.write(text)
-
-
-async def save_image(content: bytes, filename: str, dir_path: str):
-    os.makedirs(dir_path, exist_ok=True)
-    async with aiofiles.open(os.path.join(dir_path, filename), 'wb') as f:
-        await f.write(content)
 
 
 def get_images_urls(soup, base_url) -> Iterable[str]:

@@ -4,13 +4,14 @@ from motor import motor_asyncio
 
 from scrapping_asyncio.entities.task import Task
 from scrapping_asyncio.data.serialization import task_from_json, task_to_json
+from scrapping_asyncio.entities.tasks_repository import TasksRepository
 
 
 class TaskNotFound(Exception):
     pass
 
 
-class TaskRepository:
+class TaskRepository(TasksRepository):
     def __init__(self):
         self._client = motor_asyncio.AsyncIOMotorClient('mongodb://mongodb', 27017)
         self._db = self._client['db']
@@ -27,7 +28,7 @@ class TaskRepository:
         if as_json:
             as_json['id'] = as_json.pop('_id')
             return task_from_json(as_json)
-        raise TaskNotFound()
+        raise TaskNotFound(f'There is no task with id: {_id}')
 
     async def all(self) -> List[Task]:
         cursor = self.tasks.find()
